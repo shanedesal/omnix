@@ -1,0 +1,64 @@
+---
+description: Always use the latest stable versions of all packages and Flutter SDK
+alwaysApply: true
+---
+
+# Always Use Latest Stable Packages
+
+Omnix is a Flutter app (Android, iOS, Windows, macOS) using shelf, Riverpod, Supabase, Dio, and other packages. All dependencies must track the latest stable releases — never pin to an outdated version without a documented reason.
+
+## pubspec.yaml Versioning
+
+Use `^` (caret) constraints pointing to the current latest stable, never hard-pin or use overly tight ranges:
+
+```yaml
+# ✅ GOOD — tracks latest stable within the major
+dependencies:
+  flutter_riverpod: ^2.6.1
+  supabase_flutter: ^2.8.4
+  dio: ^5.8.0
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+
+# ❌ BAD — frozen, stops receiving fixes and security patches
+dependencies:
+  flutter_riverpod: 2.3.0
+  dio: ">=4.0.0 <4.1.0"
+```
+
+## Before Adding a Dependency
+
+1. Check [pub.dev](https://pub.dev) for the current latest stable version.
+2. Use that version as the lower bound with a `^` constraint.
+3. Prefer packages with a high pub.dev score, null-safety support, and active maintenance.
+
+## When Updating Existing Dependencies
+
+Run the following to upgrade all packages to their latest allowed versions:
+
+```bash
+flutter pub upgrade --major-versions
+```
+
+Then run `flutter pub outdated` to catch anything still lagging.
+
+## Flutter SDK
+
+Always target the latest stable Flutter channel:
+
+```bash
+flutter channel stable && flutter upgrade
+```
+
+The `environment` field in `pubspec.yaml` should reflect the minimum SDK version supported by the current stable release — update it when bumping Flutter.
+
+## Exceptions
+
+A dependency may be pinned to a specific version **only** if there is a documented incompatibility with the latest release. Leave a comment directly above the pinned line explaining why:
+
+```yaml
+# Pinned at 3.x — 4.0 drops support for dart:io on Windows (tracked in #42)
+some_package: ^3.5.0
+```
+
+Without such a comment, any hard-pinned or outdated constraint should be updated.

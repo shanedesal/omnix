@@ -1,14 +1,14 @@
-# omnix
+# Omnix
 
 > Manage files across all your devices from one place — phone, PC, tablet. Works over local WiFi with automatic internet fallback.
 
 ---
 
-## What is omnix?
+## What is Omnix?
 
-omnix is a cross-platform Flutter app that turns any of your devices into a connected file network. One device acts as the **hub** — the control center where you can browse, transfer, rename, copy, and delete files on any other connected device. No cloud subscription required. No cables. No third-party storage.
+Omnix is a cross-platform Flutter app that turns any of your devices into a connected file network. One device acts as the **hub** — the control center where you can browse, transfer, rename, copy, and delete files on any other connected device. No cloud subscription required. No cables. No third-party storage.
 
-When your devices are on the same WiFi, transfers are fast and fully local. When they're not (different networks, mobile data), omnix falls back to a relay through Supabase so you stay connected.
+When your devices are on the same WiFi, transfers are fast and fully local. When they're not (different networks, mobile data), Omnix falls back to a relay through Supabase so you stay connected.
 
 ---
 
@@ -56,7 +56,7 @@ This section explains every package and tool used, why it was chosen, and exactl
 
 **What it is:** A composable Dart HTTP server library, similar to Express.js in Node.
 
-**Why we use it:** omnix needs to run an HTTP server *inside* the app on each device so that other devices can connect to it and request file listings, downloads, and uploads. `shelf` is the only production-ready HTTP server library in Dart that works on both mobile and desktop.
+**Why we use it:** Omnix needs to run an HTTP server *inside* the app on each device so that other devices can connect to it and request file listings, downloads, and uploads. `shelf` is the only production-ready HTTP server library in Dart that works on both mobile and desktop.
 
 **What it does here:**
 - Each device runs a `shelf` server on port `8080` (configurable)
@@ -75,7 +75,7 @@ Device A (hub)  ──HTTP/WebSocket──►  Device B (node, shelf server on :
 
 **What it is:** A Dart package for mDNS (multicast DNS), the same protocol used by AirDrop and Bonjour to find nearby devices on a local network.
 
-**Why we use it:** Instead of making users manually type in an IP address to connect devices, omnix broadcasts each device's presence on the local network. The hub listens for these broadcasts and automatically discovers nearby nodes — no manual setup needed.
+**Why we use it:** Instead of making users manually type in an IP address to connect devices, Omnix broadcasts each device's presence on the local network. The hub listens for these broadcasts and automatically discovers nearby nodes — no manual setup needed.
 
 **What it does here:**
 - When the app starts, it registers the device on the local network as `omnix-{deviceName}._tcp`
@@ -125,11 +125,11 @@ Hub ──► Supabase channel "omnix-session-abc123" ◄── Node
 
 ---
 
-### Riverpod
+### `flutter_riverpod`
 
-**What it is:** A compile-safe, reactive state management library for Flutter. The modern successor to Provider.
+**What it is:** A compile-safe, reactive state management library for Flutter. The modern successor to Provider. (`flutter_riverpod` is the Flutter-specific wrapper around the base `riverpod` Dart package — it adds `ConsumerWidget`, `WidgetRef`, and `ProviderScope` which are all Flutter concepts. Since Omnix is a Flutter app, this is the correct package — not `riverpod` on its own.)
 
-**Why we use it:** omnix has a lot of async, reactive state — device connection status, ongoing transfers, file listings that update when remote files change, network mode switching. Riverpod handles all of this cleanly without boilerplate, and its `AsyncNotifier` pattern maps perfectly to our use cases.
+**Why we use it:** Omnix has a lot of async, reactive state — device connection status, ongoing transfers, file listings that update when remote files change, network mode switching. Riverpod handles all of this cleanly without boilerplate, and its `AsyncNotifier` pattern maps perfectly to our use cases.
 
 **What it does here:**
 - `DeviceRegistryNotifier` — holds the list of connected devices and their status (online/offline, LAN/relay)
@@ -189,7 +189,7 @@ Hub ──► Supabase channel "omnix-session-abc123" ◄── Node
 
 **What it does here:**
 - Runs the `shelf` HTTP server inside a foreground service on Android
-- Shows a persistent "omnix is running" notification while the server is active
+- Shows a persistent "Omnix is running" notification while the server is active
 - Keeps mDNS broadcasting alive in the background
 - Not needed on Windows/macOS where apps can run freely in the background
 
@@ -249,39 +249,49 @@ Hub ──► Supabase channel "omnix-session-abc123" ◄── Node
 
 ---
 
-## Project Structure
+## Suggested Project Structure
 
 ```
 lib/
+├── strings/
+│   └── app_strings.dart        ← all user-visible copy (single language)
 ├── core/
-│   ├── network/
-│   │   ├── lan_transport.dart        # shelf server + mDNS
-│   │   └── relay_transport.dart      # Supabase Realtime tunnel
-│   ├── file/
-│   │   ├── file_adapter.dart         # abstract interface
-│   │   ├── android_adapter.dart      # SAF implementation
-│   │   ├── desktop_adapter.dart      # dart:io implementation
-│   │   └── ios_adapter.dart          # sandboxed implementation
-│   └── crypto/
-│       └── hash_service.dart         # MD5 for duplicates, SHA-256 for tokens
+│   ├── config/
+│   │   └── app_config.dart     ← String.fromEnvironment only
+│   ├── di/
+│   │   └── providers.dart      ← all Flutter Riverpod providers (ProviderScope)
+│   └── router/
+│       └── app_router.dart     ← GoRouter navigation
 ├── data/
-│   ├── models/
-│   │   ├── device.dart
-│   │   ├── file_item.dart
-│   │   └── transfer.dart
+│   ├── sources/
+│   │   ├── lan_transport.dart
+│   │   ├── relay_transport.dart
+│   │   ├── file_adapter/
+│   │   │   ├── file_adapter.dart       ← abstract interface
+│   │   │   ├── android_adapter.dart
+│   │   │   └── desktop_adapter.dart
+│   │   └── secure_storage.dart
 │   └── repositories/
 │       ├── device_repository.dart
-│       └── file_repository.dart
-├── providers/                        # all Riverpod providers
-│   ├── device_registry.dart
-│   ├── transfer_queue.dart
-│   ├── file_listing.dart
-│   └── network_mode.dart
-└── ui/
-    ├── devices/                      # device list + pairing screens
-    ├── browser/                      # file browser screen
-    ├── transfers/                    # transfer queue screen
-    └── settings/                    # PIN, preferences
+│       ├── file_repository.dart
+│       └── transfer_repository.dart
+├── domain/
+│   └── models/
+│       ├── device.dart
+│       ├── file_item.dart
+│       └── transfer.dart
+└── presentation/
+    ├── devices/
+    │   ├── devices_screen.dart         ← View (ConsumerWidget)
+    │   └── device_notifier.dart        ← ViewModel (AsyncNotifier)
+    ├── browser/
+    │   ├── browser_screen.dart
+    │   └── file_notifier.dart
+    ├── transfers/
+    │   ├── transfers_screen.dart
+    │   └── transfer_notifier.dart
+    └── shared/
+        └── widgets/                    ← reusable components
 ```
 
 ---

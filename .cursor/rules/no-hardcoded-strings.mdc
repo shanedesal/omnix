@@ -1,0 +1,36 @@
+---
+description: No scattered user-facing strings — use lib/strings/app_strings.dart
+globs: **/*.dart
+alwaysApply: false
+---
+
+# No Hardcoded Strings
+
+All user-facing English copy must live in `lib/strings/app_strings.dart` on the `AppStrings` class. Do not embed display text as string literals inside widget trees or business logic.
+
+## Where Strings Live
+
+```
+lib/
+└── strings/
+    └── app_strings.dart   ← single source of truth (English-only app)
+```
+
+## Using Strings in Dart
+
+```dart
+// ✅ GOOD
+import 'package:omnix/strings/app_strings.dart';
+
+const Text(AppStrings.homePageTitle)
+Text(AppStrings.someMessageWithInterpolation(foo)) // use a static method if you need params
+
+// ❌ BAD — never do this in UI
+Text('My Devices')
+```
+
+For messages that need parameters, add a `static String methodName(...)` on `AppStrings` that returns the formatted sentence.
+
+## Exceptions
+
+Non-display strings (route paths, map keys, log messages, `String.fromEnvironment` in `core/config/app_config.dart`) do **not** need to live in `AppStrings`.
