@@ -139,6 +139,19 @@ Hub ──► Supabase channel "omnix-session-abc123" ◄── Node
 
 ---
 
+### `go_router`
+
+**What it is:** The Flutter team's declarative routing package, built on top of the Navigator 2.0 API.
+
+**Why we use it:** Omnix has several distinct screens — device list, file browser, transfer queue, pairing QR display/scan, settings — and navigating between them with named routes and deep-link support requires a proper routing solution. `go_router` is the recommended package for Flutter navigation, maintained by `flutter.dev`.
+
+**What it does here:**
+- Defines the app's route tree in `lib/core/router/app_router.dart`
+- Handles navigation between the devices screen, file browser (parameterized by device ID), transfer queue, and pairing screens
+- Guards the hub screens behind a PIN-check redirect when PIN protection is enabled
+
+---
+
 ### `permission_handler`
 
 **What it is:** A Flutter plugin that provides a unified API for requesting runtime permissions across Android and iOS.
@@ -216,7 +229,7 @@ Hub ──► Supabase channel "omnix-session-abc123" ◄── Node
 **Why we use it:** The hub PIN, pairing tokens, and Supabase session keys should not be stored in plain SharedPreferences. `flutter_secure_storage` encrypts them at rest using the platform's hardware security module.
 
 **What it does here:**
-- Stores the hub PIN hash (bcrypt)
+- Stores the hub PIN hash (HMAC-SHA256 with a random salt, both computed by the `crypto` package)
 - Stores trusted device tokens so paired devices reconnect without re-scanning
 - Stores the Supabase anon key (though this is technically public, it's good practice)
 
@@ -232,6 +245,7 @@ Hub ──► Supabase channel "omnix-session-abc123" ◄── Node
 - Computes MD5 hashes of files for duplicate detection
 - Hashes are computed in chunks so large files don't load fully into memory
 - SHA-256 used for pairing token generation and validation
+- HMAC-SHA256 with a random salt used to hash the hub PIN before it is written to `flutter_secure_storage`
 
 ---
 

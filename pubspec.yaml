@@ -31,10 +31,48 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+
+  # HTTP server (embedded in-app, each device runs its own shelf server)
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+  shelf_web_socket: ^3.0.0
+
+  # LAN device discovery via mDNS / Bonjour
+  multicast_dns: ^0.3.3
+
+  # Supabase Realtime — relay tunnel when devices are on different networks
   supabase_flutter: ^2.12.4
+
+  # State management
+  flutter_riverpod: ^3.3.1
+
+  # Declarative routing
+  go_router: ^17.2.3
+
+  # Runtime permissions (Android storage, iOS sandbox)
+  permission_handler: ^12.0.1
+
+  # Cross-platform file system paths (downloads dir, app cache dir, etc.)
+  path_provider: ^2.1.5
+
+  # Android foreground service — keeps the shelf server alive when backgrounded
+  flutter_foreground_task: ^9.2.2
+
+  # QR code generation (hub pairing screen)
+  qr_flutter: ^4.1.0
+
+  # QR / barcode scanning (new device pairing via camera)
+  mobile_scanner: ^7.2.0
+
+  # Secure storage for PIN hash, pairing tokens, and Supabase keys
+  flutter_secure_storage: ^10.2.0
+
+  # Cryptographic hashing — MD5 for dedup, SHA-256/HMAC-SHA256 for tokens and PIN
+  crypto: ^3.0.7
+
+  # HTTP client with progress callbacks and cancel tokens (file downloads over LAN)
+  dio: ^5.9.2
 
 dev_dependencies:
   flutter_test:
