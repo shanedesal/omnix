@@ -1,0 +1,106 @@
+---
+description: Enforce modern Dart 3 and Flutter coding practices across the project
+alwaysApply: true
+---
+
+# Modern Dart & Flutter Practices
+
+## Dart 3 Features
+
+Use pattern matching, records, and sealed classes instead of manual type checks or verbose data holders:
+
+```dart
+// ❌ BAD
+if (result is Success) {
+  final value = (result as Success).value;
+}
+
+// ✅ GOOD
+switch (result) {
+  case Success(:final value) => doSomething(value),
+  case Failure(:final error) => handleError(error),
+}
+```
+
+```dart
+// ❌ BAD — one-off class just to return two values
+class MinMax { final int min, max; const MinMax(this.min, this.max); }
+MinMax findRange(List<int> values) => MinMax(values.reduce(min), values.reduce(max));
+
+// ✅ GOOD — record for a small, anonymous bundle or tuple return value
+(int min, int max) findRange(List<int> values) =>
+    (values.reduce(min), values.reduce(max));
+```
+
+> **Records vs. classes**: records are ideal for lightweight, anonymous data bundles — return values, local tuples, and grouping unrelated values. For domain models with behaviour, validation, or long lifetimes (e.g. `User`, `Order`, `Product`), continue using named classes or freezed data classes.
+
+## Null Safety
+
+Prefer non-nullable types. Avoid `!` (bang operator) — use `??`, `?.`, `if-null`, or early returns instead:
+
+```dart
+// ❌ BAD
+final name = user!.name!;
+
+// ✅ GOOD
+final name = user?.name ?? 'Unknown';
+```
+
+## const
+
+Use `const` constructors and literals wherever possible to aid tree-shaking and performance:
+
+```dart
+// ❌ BAD
+Text(AppStrings.greeting, style: TextStyle(fontSize: 16))
+
+// ✅ GOOD
+const Text(AppStrings.greeting, style: TextStyle(fontSize: 16))
+```
+
+## async / await
+
+Always use `async`/`await` over raw `.then()`/`.catchError()` callbacks:
+
+```dart
+// ❌ BAD
+fetchUser().then((u) => setState(() => user = u)).catchError((e) => print(e));
+
+// ✅ GOOD
+try {
+  final u = await fetchUser();
+  // handle result
+} catch (e) {
+  // handle error
+}
+```
+
+## State Management (Riverpod)
+
+Use providers for all shared or async state. Never use `setState` for anything beyond purely local ephemeral UI state:
+
+```dart
+// ❌ BAD — global mutable state or setState for business logic
+setState(() => _user = await fetchUser());
+
+// ✅ GOOD
+final userProvider = FutureProvider<User>((ref) => fetchUser());
+// consume with ref.watch(userProvider) in widgets
+```
+
+## Modern Collection Syntax
+
+Prefer collection `if`, `for`, and spread operators over imperative `add`/`addAll` calls:
+
+```dart
+// ❌ BAD
+final items = <Widget>[];
+items.add(const Header());
+if (isAdmin) items.add(const AdminPanel());
+
+// ✅ GOOD
+final items = [
+  const Header(),
+  if (isAdmin) const AdminPanel(),
+];
+```

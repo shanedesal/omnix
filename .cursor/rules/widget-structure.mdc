@@ -1,0 +1,103 @@
+---
+description: Keep Flutter widgets focused, decomposed, and files within size limits
+alwaysApply: true
+---
+
+# Widget Structure & File Size
+
+## No Business Logic in UI Files
+
+Widgets are for layout and presentation only. Any logic that fetches data, transforms state, or makes decisions belongs in a provider/notifier — never inline in a widget:
+
+```dart
+// ❌ BAD — business logic in a widget
+class OrderScreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final orders = ref.watch(ordersProvider);
+    final filtered = orders.where((o) => o.status == 'active').toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return ListView(children: filtered.map((o) => OrderTile(o)).toList());
+  }
+}
+
+// ✅ GOOD — logic lives in the notifier, widget just renders
+// In orders_notifier.dart:
+List<Order> get activeOrders => state.where((o) => o.status == 'active').toList()
+  ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+// In order_screen.dart:
+class OrderScreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final orders = ref.watch(ordersNotifierProvider.notifier).activeOrders;
+    return ListView(children: orders.map((o) => OrderTile(o)).toList());
+  }
+}
+```
+
+## One Widget Per File
+
+Each file should contain one primary public widget. Small, tightly-coupled private helper widgets (`_MyHelper`) can live in the same file, but extract them once they grow beyond ~50 lines.
+
+## File Line Limit: 300 Lines
+
+No Dart file should exceed 300 lines. If it does:
+- Split large screens into smaller sub-widgets
+- Move logic into a provider/notifier
+- Extract reusable widgets into a shared `widgets/` folder
+
+## Extract Widgets as Classes, NOT Methods
+
+Helper methods (`_buildHeader()`) are a Flutter anti-pattern — they re-run on every rebuild and lose `const` optimisation:
+
+```dart
+// ❌ BAD
+Widget _buildAvatar() => CircleAvatar(...);
+
+// ✅ GOOD
+class _Avatar extends StatelessWidget {
+  const _Avatar();
+  @override
+  Widget build(BuildContext context) => const CircleAvatar(...);
+}
+```
+
+## Extract Inline Callbacks
+
+Avoid fat anonymous lambdas in widget trees. Extract them to named methods for readability and testability:
+
+```dart
+// ❌ BAD
+ElevatedButton(
+  onPressed: () {
+    final result = doSomething();
+    if (result) navigate();
+    else showError();
+  },
+  child: const Text(AppStrings.submit),
+)
+
+// ✅ GOOD
+ElevatedButton(onPressed: _handleSubmit, child: const Text(AppStrings.submit))
+
+void _handleSubmit() {
+  final result = doSomething();
+  if (result) navigate();
+  else showError();
+}
+```
+
+## Keep `build()` Shallow
+
+`build` should read like a table of contents. If it exceeds ~40 lines or 4–5 levels of nesting, decompose into sub-widgets.
+
+## Prefer `SizedBox` over `Container` for Spacing
+
+```dart
+// ❌ BAD
+Container(height: 16)
+
+// ✅ GOOD
+const SizedBox(height: 16)
+```
