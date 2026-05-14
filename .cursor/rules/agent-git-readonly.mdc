@@ -1,0 +1,26 @@
+---
+description: Agent may only use read-only git commands for context; never modify repo or remotes
+alwaysApply: true
+---
+
+# Git: Read-Only for the Agent
+
+The agent must **not** change version control state. Use git **only** to gather context.
+
+## Allowed (inspection / read-only)
+
+Examples: `git status`, `git log`, `git show`, `git diff`, `git blame`, `git branch` / `git branch -a` (listing), `git tag` (listing), `git remote -v`, `git rev-parse`, `git config --get …`, `git describe`, `git shortlog` (read-only output).
+
+Prefer **read** operations that do not update refs, the index, `.git/`, or the working tree beyond what the user already has.
+
+## Forbidden
+
+Do **not** run commands that write to git or drive repo changes, including but not limited to:
+
+- **Commits / staging**: `git add`, `git commit`, `git restore` / `git checkout --` (file reverts), `git reset` (any mode that moves HEAD or unstages), `git stash` (push/apply/pop/drop), `git cherry-pick`, `git revert` (creates commit)
+- **Branches / tags**: create/delete/rename branches or tags; `git switch` / `git checkout` to another branch or that updates files
+- **Remotes / sync**: `git push`, `git pull`, `git fetch` (updates remote-tracking refs)
+- **History rewrite**: `git rebase`, `git merge`, `git am`, `filter-repo`, force-push, etc.
+- **Hooks / config writes**: modifying `.git/hooks`, `git config` **without** `--get` / `--get-all` (i.e. no `git config --global` or setting keys)
+
+If the user explicitly asks the agent to commit, push, or otherwise mutate git, **decline** and ask them to run those commands locally; the agent stays read-only for git.
